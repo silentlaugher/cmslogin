@@ -1,5 +1,17 @@
 <?php 
+    //check if form is submitted and if request method is post
+    if(isset($_POST['registerBtn']) && $_SERVER['REQUEST_METHOD'] === 'POST'){
 
+        //initialize errors array
+        $errors = [];
+
+        //validate form inputs
+        $arr_user_input_value = array('first_name', 'last_name', 'email', 'username', 'password', 'confirm_password', 'gender', 'month', 'day', 'year');
+        $errors = check_input_values($arr_user_input_value, $errors);
+
+        $arr_user_input_length = array('first_name' => 2, 'last_name' => 2, 'email' => 10, 'username' => 4, 'password' => 8);
+        $errors = check_input_length($arr_user_input_length, $errors);
+    }
 ?>
 
 <div class="regContainer">
