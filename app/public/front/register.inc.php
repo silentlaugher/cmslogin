@@ -1,17 +1,64 @@
 <?php 
+
+    require_once __DIR__."/../../resources/functions.php";
+
+    //intialize result
+    $result = " ";
+
     //check if form is submitted and if request method is post
     if(isset($_POST['registerBtn']) && $_SERVER['REQUEST_METHOD'] === 'POST'){
 
+        //check if password fields match
+        if($_POST['password'] === $_POST['confirm_password']){
         //initialize errors array
         $errors = [];
 
-        //validate form inputs
+        //validate input values
         $arr_user_input_value = array('first_name', 'last_name', 'email', 'username', 'password', 'confirm_password', 'gender', 'month', 'day', 'year');
         $errors = check_input_values($arr_user_input_value, $errors);
 
+        //validate input length
         $arr_user_input_length = array('first_name' => 2, 'last_name' => 2, 'email' => 10, 'username' => 4, 'password' => 8);
         $errors = check_input_length($arr_user_input_length, $errors);
+
+        //validate input email
+        $errors = check_valid_email($_POST['email'], $errors);
+        if(empty($errors)){
+            //get validated data
+            $first_name = $_POST['first_name'];
+            $last_name = $_POST['last_name'];
+            $username = $_POST['username'];
+	 		$email = $_POST['email'];
+	   		$password = $_POST['password'];
+	   		$confirm_password = $_POST['confirm_password'];
+	 		$gender = $_POST['gender'];
+	 		$month = $_POST['month'];
+	 		$day = $_POST['day'];
+	 		$year = $_POST['year'];
+	 		$birthdate = "{$year}-{$month}-{$day}";
+
+             //insert data into database
+
+        }else{
+            $result = get_errors($errors);
+        }
+
+        }else{
+            $result = "<p style='color:red;'>Password fields do not match</p>";
+        }
+    }else{
+        $_POST['first_name'] = null;
+        $_POST['last_name'] = null;
+        $_POST['username'] = null;
+        $_POST['email'] = null;
+        $_POST['password'] = null;
+        $_POST['confirm_password'] = null;
+        $_POST['gender'] = null;
+        $_POST['month'] =null;
+        $_POST['day'] = null;
+        $_POST['year'] = null;
     }
+
 ?>
 
 <div class="regContainer">
@@ -21,8 +68,9 @@
             </div>
             <div class="regForm">
                 <div>
+                    <?php echo $GLOBALS['result']; ?>
                 </div>
-                <form action="register.php" method="POST">
+                <form action="" method="POST" id="register"> 
                     <table>
                         <div class="name" style="float: left;">
                         <label for="firstNameField" class="form-label">First Name</label>
