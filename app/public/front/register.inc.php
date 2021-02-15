@@ -1,6 +1,8 @@
 <?php 
-
+    //get functions
     require_once __DIR__."/../../resources/functions.php";
+    //get database connection
+    require_once __DIR__."/../../config/database.php";
 
     //intialize result
     $result = " ";
@@ -25,20 +27,64 @@
         $errors = check_valid_email($_POST['email'], $errors);
         if(empty($errors)){
             //get validated data
-            $first_name = $_POST['first_name'];
-            $last_name = $_POST['last_name'];
-            $username = $_POST['username'];
-	 		$email = $_POST['email'];
-	   		$password = $_POST['password'];
-	   		$confirm_password = $_POST['confirm_password'];
-	 		$gender = $_POST['gender'];
-	 		$month = $_POST['month'];
-	 		$day = $_POST['day'];
-	 		$year = $_POST['year'];
-	 		$birthdate = "{$year}-{$month}-{$day}";
+            $first_name = trim($_POST['first_name']);
+            $last_name = trim($_POST['last_name']);
+            $username = trim($_POST['username']);
+	 		$email = trim($_POST['email']);
+	   		$password = trim($_POST['password']);
+	   		$confirm_password = trim($_POST['confirm_password']);
+	 		$gender = ($_POST['gender']);
+	 		$month = ($_POST['month']);
+	 		$day = ($_POST['day']);
+	 		$year = ($_POST['year']);
+	 		$birthday = "{$year}-{$month}-{$day}";
+            date_default_timezone_set("America/New_York");
+            $created_at = date("M-d-y, H:i:s");
+        try{
+            //insert user data into database
+            $sql = "INSERT INTO users(first_name, last_name, username, email, password, gender, birthday, created_at)VALUES(:first_name, :last_name, :username, :email, :password, :gender, :birthday, :created_at)";
+            $stmt = $dbc->prepare($sql);
+            $stmt->bindValue(':first_name', $first_name);
+            $stmt->bindValue(':last_name', $last_name);
+            $stmt->bindValue(':username', $username);
+            $stmt->bindValue(':email', $email);
+            $stmt->bindValue(':password', $password);
+            $stmt->bindValue(':gender', $gender);
+            $stmt->bindValue(':birthday', $birthday);
+            $stmt->bindValue(':created_at', $created_at);
+            $query = $stmt->execute();
 
-             //insert data into database
-
+            //check if query was successful, then send a confirmation registration email
+            if($query){
+                //get inserted user id
+                $user_id = $dbc->lastInsertId();
+                //encode user's id for verification
+                $verificationCode = base64_encode("randomStringAzByCx192837{$user_id}");
+                $send_to = $email;
+                $subject = "Account Verification";
+                $body = '<html>
+                <body style="background-color:#e0e0eb; font-family:Halvetica, sans-serif; line-height:1.8em;">
+                <h1 style="margin-top: 20px">User Verification Email</h1>
+                <p>Dear '.$username.'; Thank you for registering on Edynak cmslogin website. Please click the link/button below to verify your email address</p>
+                <p><a href="http://localhost/cmslogin/app/public/index.php?page=activate&code='.$verificationCode.'" target="_blank" style="border:1px solid grey; background-color:green; color:white; border-radius:4px; padding:10px;">Confirm Email</a></p>
+                <h3>&copy; '.date("Y").' EDYNAK CMS LOGIN</h3>
+                </body>
+                </html>';
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= "From:admin@edynak.com";
+                //send email and check if email was sent
+                if(mail($send_to, $subject, $body, $headers)){
+                    $result = "<p style='color:green'>User created succesfully</p>";
+                }else{
+                    $result = "<p style='color:red'>An error occured! Please try again.</p>"; 
+                }
+            } 
+        }catch(PDOException $ex){
+            error_log($ex->getMessage());
+            $result = "<p style='color:red'>An error occured: ".$ex->getMessage()."</p>";
+        }
+            
         }else{
             $result = get_errors($errors);
         }
