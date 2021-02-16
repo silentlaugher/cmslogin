@@ -12,7 +12,7 @@
         $dbc->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $dbc->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         //check connection to database
-        echo "You have successfully connected to the database named ".$dbname;
+        //echo "You have successfully connected to the database named ".$dbname;
 
     }catch(PDOException $ex){
         //get error message

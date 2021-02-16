@@ -1,17 +1,110 @@
 <?php 
+    //get functions
+    require_once __DIR__."/../../resources/functions.php";
+    //get database connection
+    require_once __DIR__."/../../config/database.php";
+
+    //intialize result
+    $result = " ";
+
     //check if form is submitted and if request method is post
     if(isset($_POST['registerBtn']) && $_SERVER['REQUEST_METHOD'] === 'POST'){
 
+        //check if password fields match
+        if($_POST['password'] === $_POST['confirm_password']){
         //initialize errors array
         $errors = [];
 
-        //validate form inputs
+        //validate input values
         $arr_user_input_value = array('first_name', 'last_name', 'email', 'username', 'password', 'confirm_password', 'gender', 'month', 'day', 'year');
         $errors = check_input_values($arr_user_input_value, $errors);
 
+        //validate input length
         $arr_user_input_length = array('first_name' => 2, 'last_name' => 2, 'email' => 10, 'username' => 4, 'password' => 8);
         $errors = check_input_length($arr_user_input_length, $errors);
+
+        //validate input email
+        $errors = check_valid_email($_POST['email'], $errors);
+        if(empty($errors)){
+            //get validated data
+            $first_name = trim($_POST['first_name']);
+            $last_name = trim($_POST['last_name']);
+            $username = trim($_POST['username']);
+	 		$email = trim($_POST['email']);
+	   		$password = trim($_POST['password']);
+	   		$confirm_password = trim($_POST['confirm_password']);
+	 		$gender = ($_POST['gender']);
+	 		$month = ($_POST['month']);
+	 		$day = ($_POST['day']);
+	 		$year = ($_POST['year']);
+	 		$birthday = "{$year}-{$month}-{$day}";
+            date_default_timezone_set("America/New_York");
+            $created_at = date("M-d-y, H:i:s");
+        try{
+            //insert user data into database
+            $sql = "INSERT INTO users(first_name, last_name, username, email, password, gender, birthday, created_at)VALUES(:first_name, :last_name, :username, :email, :password, :gender, :birthday, :created_at)";
+            $stmt = $dbc->prepare($sql);
+            $stmt->bindValue(':first_name', $first_name);
+            $stmt->bindValue(':last_name', $last_name);
+            $stmt->bindValue(':username', $username);
+            $stmt->bindValue(':email', $email);
+            $stmt->bindValue(':password', $password);
+            $stmt->bindValue(':gender', $gender);
+            $stmt->bindValue(':birthday', $birthday);
+            $stmt->bindValue(':created_at', $created_at);
+            $query = $stmt->execute();
+
+            //check if query was successful, then send a confirmation registration email
+            if($query){
+                //get inserted user id
+                $user_id = $dbc->lastInsertId();
+                //encode user's id for verification
+                $verificationCode = base64_encode("randomStringAzByCx192837{$user_id}");
+                $send_to = $email;
+                $subject = "Account Verification";
+                $body = '<html>
+                <body style="background-color:#e0e0eb; font-family:Halvetica, sans-serif; line-height:1.8em;">
+                <h1 style="margin-top: 20px">User Verification Email</h1>
+                <p>Dear '.$username.'; Thank you for registering on Edynak cmslogin website. Please click the link/button below to verify your email address</p>
+                <p><a href="http://localhost/cmslogin/app/public/index.php?page=activate&code='.$verificationCode.'" target="_blank" style="border:1px solid grey; background-color:green; color:white; border-radius:4px; padding:10px;">Confirm Email</a></p>
+                <h3>&copy; '.date("Y").' EDYNAK CMS LOGIN</h3>
+                </body>
+                </html>';
+                $headers = "MIME-Version: 1.0" . "\r\n";
+                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+                $headers .= "From:admin@edynak.com";
+                //send email and check if email was sent
+                if(mail($send_to, $subject, $body, $headers)){
+                    $result = "<p style='color:green'>User created succesfully</p>";
+                }else{
+                    $result = "<p style='color:red'>An error occured! Please try again.</p>"; 
+                }
+            } 
+        }catch(PDOException $ex){
+            error_log($ex->getMessage());
+            $result = "<p style='color:red'>An error occured: ".$ex->getMessage()."</p>";
+        }
+            
+        }else{
+            $result = get_errors($errors);
+        }
+
+        }else{
+            $result = "<p style='color:red;'>Password fields do not match</p>";
+        }
+    }else{
+        $_POST['first_name'] = null;
+        $_POST['last_name'] = null;
+        $_POST['username'] = null;
+        $_POST['email'] = null;
+        $_POST['password'] = null;
+        $_POST['confirm_password'] = null;
+        $_POST['gender'] = null;
+        $_POST['month'] =null;
+        $_POST['day'] = null;
+        $_POST['year'] = null;
     }
+
 ?>
 
 <div class="regContainer">
@@ -21,8 +114,9 @@
             </div>
             <div class="regForm">
                 <div>
+                    <?php echo $GLOBALS['result']; ?>
                 </div>
-                <form action="register.php" method="POST">
+                <form action="" method="POST" id="register"> 
                     <table>
                         <div class="name" style="float: left;">
                         <label for="firstNameField" class="form-label">First Name</label>
