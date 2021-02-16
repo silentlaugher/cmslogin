@@ -3,7 +3,7 @@
 ?>
 
     <footer>
-        <div class="container">
+        <div class="<?php if(isset($container)): echo $container; endif; ?>">
         
         </div>
     </footer>

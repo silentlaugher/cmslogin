@@ -40,6 +40,8 @@
 	 		$birthday = "{$year}-{$month}-{$day}";
             date_default_timezone_set("America/New_York");
             $created_at = date("M-d-y, H:i:s");
+            //hash the password
+            $hashed_password = password_hash($password, PASSWORD_BCRYPT);
         try{
             //insert user data into database
             $sql = "INSERT INTO users(first_name, last_name, username, email, password, gender, birthday, created_at)VALUES(:first_name, :last_name, :username, :email, :password, :gender, :birthday, :created_at)";
@@ -48,7 +50,7 @@
             $stmt->bindValue(':last_name', $last_name);
             $stmt->bindValue(':username', $username);
             $stmt->bindValue(':email', $email);
-            $stmt->bindValue(':password', $password);
+            $stmt->bindValue(':password', $hashed_password);
             $stmt->bindValue(':gender', $gender);
             $stmt->bindValue(':birthday', $birthday);
             $stmt->bindValue(':created_at', $created_at);

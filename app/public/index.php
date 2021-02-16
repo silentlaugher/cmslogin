@@ -1,8 +1,13 @@
 <?php
-    include_once __DIR__.'/../resources/templates/layouts/header.php';
-?>
 
-<?php 
+    //initalize container
+    $container = "container";
+    
+    include_once __DIR__.'/../resources/templates/layouts/header.php';
+    
+    //initalize container
+    $container = "container";
+
     //files directory
     $filesDirectory = "front";
 
@@ -30,8 +35,6 @@
         //include home page by default
         include_once($filesDirectory."/home.inc.php");
     }
-?>
-
-<?php 
+ 
     include_once __DIR__.'/../resources/templates/layouts/footer.php';
 ?>
